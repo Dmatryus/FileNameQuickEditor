@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="GUIHelper">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../GUIHelper/out/artifacts/GUIHelper_jar/GUIHelper.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
