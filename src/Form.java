@@ -3,15 +3,20 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 
 public class Form extends JFrame {
 
-    JList list;
-    File[] files;
+    // Глобальные элементы
+    JTable table;
     JTextField selectTF;
     JTextField funkTF;
     JComboBox lengthsCB;
+
+    // Глобальны данные
+    ArrayList<File> files = new ArrayList<File>();
     final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание"};
+    FileTableModel model = new FileTableModel(files);
     //   String selectedFunk = null;
 
     public Form() {
@@ -32,7 +37,7 @@ public class Form extends JFrame {
         add(selectPanel, BorderLayout.NORTH);
 
         // Панель выбора файлов
-        list = new JList();
+        table = new JTable(model);
         selectBt.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
@@ -46,7 +51,9 @@ public class Form extends JFrame {
                 }
             }
         });
-        add(new JScrollPane(list), BorderLayout.CENTER);
+        table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        add(new JScrollPane(table), BorderLayout.CENTER);
 
         // Панель функций
         JPanel funkPanel = new JPanel(new BorderLayout());
@@ -128,14 +135,13 @@ public class Form extends JFrame {
     }
 
     private void renameFiles(mods mod) {
-        int[] is = list.getSelectedIndices();
+        int[] is = table.getSelectedRows();
         String[] brokenName;
         String rName;
         String name;
         int extensionPosition;
         for (int i = 0; i < is.length; i++) {
-            name = files[is[i]].getName();
-            brokenName = files[is[i]].getPath().split(name);
+            name = table.getValueAt(i, 0).toString();
             extensionPosition = name.lastIndexOf(".");
             String[] splitType = {name.substring(0, extensionPosition), name.substring(extensionPosition)};
             try {
@@ -173,23 +179,22 @@ public class Form extends JFrame {
             } catch (Exception excp){
                 JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
-            rName = brokenName[0].concat(name);
-            files[is[i]].renameTo(new File(rName));
+            rName = selectTF.getText()+ "//" + name;
+            model.getFileAt(i).renameTo(new File(rName));
         }
         setCatalog(selectTF.getText());
+        model.fireTableDataChanged();
     }
 
     private void setCatalog(String path) {
         try {
             File catalog = new File(path);
-            files = catalog.listFiles();
-            String[] names = new String[files.length];
+            File[] openCatalog = catalog.listFiles();
+            files.clear();
+            for (int i =0; i<openCatalog.length; i++)
+                files.add(openCatalog[i]);
 
-            for (int i = 0; i < names.length; i++)
-                names[i] = files[i].getName();
-
-            list.setListData(names);
-
+            model.fireTableDataChanged();
         } catch (NullPointerException e) {
             JOptionPane.showMessageDialog(this, "В выбранной дериктории не найдено файлов.", "Пустая дериктория", JOptionPane.ERROR_MESSAGE);
         }
