@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,7 +16,7 @@ public class Form extends JFrame {
 
     // Глобальны данные
     ArrayList<File> files = new ArrayList<File>();
-    final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание"};
+    final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Удаление подстрок"};
     FileTableModel model = new FileTableModel(files);
     //   String selectedFunk = null;
 
@@ -53,6 +54,7 @@ public class Form extends JFrame {
         });
         table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.setRowSorter(new TableRowSorter(model));
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         // Панель функций
@@ -115,11 +117,24 @@ public class Form extends JFrame {
         delPanel.add(prefDelBt);
         delPanel.add(postDelBt);
 
+        // Панель удаления подстрок
+        JPanel delSubstringPanel = new JPanel(new FlowLayout());
+        JButton delSubBt = new JButton("Удалить");
+        delSubBt.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                renameFiles(mods.DELSUB);
+            }
+        });
+        delSubstringPanel.add(funkTF);
+        delSubstringPanel.add(delSubBt);
+
 
         final JPanel undefPanel = new JPanel(new CardLayout());
         undefPanel.add(regPanel, FUNKS[0]);
         undefPanel.add(lengthPanel, FUNKS[1]);
         undefPanel.add(delPanel, FUNKS[2]);
+        undefPanel.add(delSubstringPanel, FUNKS[3]);
         funkPanel.add(undefPanel, BorderLayout.CENTER);
         final CardLayout layout = (CardLayout) undefPanel.getLayout();
         layout.show(undefPanel, FUNKS[0]);
@@ -136,7 +151,6 @@ public class Form extends JFrame {
 
     private void renameFiles(mods mod) {
         int[] is = table.getSelectedRows();
-        String[] brokenName;
         String rName;
         String name;
         int extensionPosition;
@@ -170,6 +184,9 @@ public class Form extends JFrame {
                         break;
                     case DELPOST:
                         name = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
+                        break;
+                    case DELSUB:
+                        name = name.replaceAll(funkTF.getText(), "");
                         break;
                 }
             } catch (EmptyFieldException excp) {
