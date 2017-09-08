@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 class Form extends JFrame {
 
-    private final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Изменение подстрок", "Инкрименирование записей"};
+    private final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Изменение подстрок", "Инкрименирование записей", "Удаление файлов"};
     private HashMap<String, JTextField> funkTF = new HashMap<>();
     // Глобальные элементы
     // Общие
@@ -87,6 +87,7 @@ class Form extends JFrame {
         });
         regPanel.add(toLowBt);
         regPanel.add(toUpBt);
+
         // Панель удлинения
         final JPanel lengthPanel = new JPanel(new FlowLayout());
         funkTF.put("extension", new JTextField(20));
@@ -105,6 +106,7 @@ class Form extends JFrame {
         lengthPanel.add(funkTF.get("extension"));
         lengthPanel.add(prefixBt);
         lengthPanel.add(postfixBt);
+
         // Панель укорачивания
         JPanel delPanel = new JPanel(new FlowLayout());
         Integer[] nums = new Integer[19];
@@ -167,6 +169,24 @@ class Form extends JFrame {
         incPanel.add(selectVarAddInc);
         incPanel.add(exeBt);
 
+        // Панель удаления файлов
+        JPanel delFilePanel = new JPanel(new FlowLayout());
+        JButton delFileBt = new JButton("Удалить файлы");
+        delFileBt.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int[] is = table.getSelectedRows();
+                String name, fullName;
+                for (int i = 0; i<is.length; i++){
+                    name = table.getValueAt(i, 0).toString();
+                    fullName = selectTF.getText()+ "//" + name;
+                    model.getFileAt(i).delete();
+                    setCatalog(selectTF.getText());
+                    model.fireTableDataChanged();
+                }
+            }
+        });
+        delFilePanel.add(delFileBt);
 
         final JPanel undefPanel = new JPanel(new CardLayout());
         undefPanel.add(regPanel, FUNKS[0]);
@@ -174,6 +194,7 @@ class Form extends JFrame {
         undefPanel.add(delPanel, FUNKS[2]);
         undefPanel.add(substringPanel, FUNKS[3]);
         undefPanel.add(incPanel, FUNKS[4]);
+        undefPanel.add(delFilePanel, FUNKS[5]);
         funkPanel.add(undefPanel, BorderLayout.CENTER);
         final CardLayout layout = (CardLayout) undefPanel.getLayout();
         layout.show(undefPanel, FUNKS[0]);
