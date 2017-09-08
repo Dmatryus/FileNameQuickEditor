@@ -9,20 +9,27 @@ import java.util.ArrayList;
 public class Form extends JFrame {
 
     // Глобальные элементы
+    // Общие
     JTable table;
     JTextField selectTF;
-    JTextField funkTF;
+    JTextField[] funkTF = new JTextField[3];
+    // Укорачивание
     JComboBox lengthsCB;
+    // Инкрименирование
+    JCheckBox beginWriteCheckB;
+    JTextField initValTF;
+    JComboBox selectVarAddInc;
 
     // Глобальны данные
     ArrayList<File> files = new ArrayList<File>();
-    final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Удаление подстрок"};
+    final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Удаление подстрок", "Инкрименирование записей"};
     FileTableModel model = new FileTableModel(files);
     //   String selectedFunk = null;
 
     public Form() {
         super("FNQE");
-        setSize(800, 600);
+        setSize(1100, 600);
+        setMinimumSize(new Dimension(1100, 200));
         setLayout(new BorderLayout());
 
         // Панель выбора дериктории
@@ -59,8 +66,8 @@ public class Form extends JFrame {
 
         // Панель функций
         JPanel funkPanel = new JPanel(new BorderLayout());
-        final JComboBox selectFunkCB = new JComboBox(FUNKS);
-        funkPanel.add(selectFunkCB, BorderLayout.WEST);
+        final JComboBox selectFunkComboB = new JComboBox(FUNKS);
+        funkPanel.add(selectFunkComboB, BorderLayout.WEST);
 
         // Панель регистра
         final JPanel regPanel = new JPanel(new FlowLayout());
@@ -80,7 +87,7 @@ public class Form extends JFrame {
         regPanel.add(toUpBt);
         // Панель удлинения
         final JPanel lengthPanel = new JPanel(new FlowLayout());
-        funkTF = new JTextField(20);
+        funkTF[0] = new JTextField(20);
         JButton prefixBt = new JButton("Префикс");
         JButton postfixBt = new JButton("Постфис");
         prefixBt.addActionListener(new ActionListener() {
@@ -93,7 +100,7 @@ public class Form extends JFrame {
                 renameFiles(mods.POSTFIX);
             }
         });
-        lengthPanel.add(funkTF);
+        lengthPanel.add(funkTF[0]);
         lengthPanel.add(prefixBt);
         lengthPanel.add(postfixBt);
         // Панель укорачивания
@@ -120,14 +127,37 @@ public class Form extends JFrame {
         // Панель удаления подстрок
         JPanel delSubstringPanel = new JPanel(new FlowLayout());
         JButton delSubBt = new JButton("Удалить");
+        funkTF[1] = new JTextField(20);
         delSubBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 renameFiles(mods.DELSUB);
             }
         });
-        delSubstringPanel.add(funkTF);
+        delSubstringPanel.add(funkTF[1]);
         delSubstringPanel.add(delSubBt);
+
+        // Панель инкриминирования
+        JPanel incPanel = new JPanel(new FlowLayout());
+        initValTF = new JTextField(5);
+        initValTF.setToolTipText("Ввод начального значения");
+        beginWriteCheckB = new JCheckBox("Писать число в начале конструкции");
+        funkTF[2] = new JTextField(20);
+        funkTF[2].setToolTipText("Ввод текстовой части конструкции");
+        String[] varAddInc = {"Префиксное добавление", "Постфиксное добавление", "Полная замена"};
+        selectVarAddInc = new JComboBox(varAddInc);
+        JButton exeBt = new JButton("Переименовать");
+        exeBt.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                renameFiles(mods.INC);
+            }
+        });
+        incPanel.add(initValTF);
+        incPanel.add(beginWriteCheckB);
+        incPanel.add(funkTF[2]);
+        incPanel.add(selectVarAddInc);
+        incPanel.add(exeBt);
 
 
         final JPanel undefPanel = new JPanel(new CardLayout());
@@ -135,12 +165,13 @@ public class Form extends JFrame {
         undefPanel.add(lengthPanel, FUNKS[1]);
         undefPanel.add(delPanel, FUNKS[2]);
         undefPanel.add(delSubstringPanel, FUNKS[3]);
+        undefPanel.add(incPanel, FUNKS[4]);
         funkPanel.add(undefPanel, BorderLayout.CENTER);
         final CardLayout layout = (CardLayout) undefPanel.getLayout();
         layout.show(undefPanel, FUNKS[0]);
-        selectFunkCB.addActionListener(new ActionListener() {
+        selectFunkComboB.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                layout.show(undefPanel, (String) selectFunkCB.getSelectedItem());
+                layout.show(undefPanel, (String) selectFunkComboB.getSelectedItem());
             }
         });
         add(funkPanel, BorderLayout.SOUTH);
@@ -153,7 +184,8 @@ public class Form extends JFrame {
         int[] is = table.getSelectedRows();
         String rName;
         String name;
-        int extensionPosition;
+        String pName;
+        int extensionPosition, iniyValInc;
         for (int i = 0; i < is.length; i++) {
             name = table.getValueAt(i, 0).toString();
             extensionPosition = name.lastIndexOf(".");
@@ -167,16 +199,16 @@ public class Form extends JFrame {
                         name = splitType[0].toUpperCase() + splitType[1];
                         break;
                     case PREFIX:
-                        if (funkTF.getText().equals(""))
+                        if (funkTF[0].getText().equals(""))
                             throw new EmptyFieldException();
                         else
-                            name = funkTF.getText() + name;
+                            name = funkTF[0].getText() + name;
                         break;
                     case POSTFIX:
-                        if (funkTF.getText().equals(""))
+                        if (funkTF[0].getText().equals(""))
                             throw new EmptyFieldException();
                         else {
-                            name = splitType[0] + funkTF.getText() + splitType[1];
+                            name = splitType[0] + funkTF[0].getText() + splitType[1];
                         }
                         break;
                     case DELPREF:
@@ -186,7 +218,10 @@ public class Form extends JFrame {
                         name = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
                         break;
                     case DELSUB:
-                        name = name.replaceAll(funkTF.getText(), "");
+                        name = splitType[0].replaceAll(funkTF[1].getText(), "") + splitType[1];
+                        break;
+                    case INC:
+                        name = incName(i, splitType[0]) + splitType[1];
                         break;
                 }
             } catch (EmptyFieldException excp) {
@@ -214,6 +249,29 @@ public class Form extends JFrame {
             model.fireTableDataChanged();
         } catch (NullPointerException e) {
             JOptionPane.showMessageDialog(this, "В выбранной дериктории не найдено файлов.", "Пустая дериктория", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private String incName(int i, String beginS){
+        // Начальное значение
+        int inc = i;
+        if (!(initValTF.getText().isEmpty() || initValTF.getText() == ""))
+            inc = Integer.getInteger(initValTF.getText()) + i;
+        // Формирование конструкции
+        String r = funkTF[2].getText();
+        if(beginWriteCheckB.isSelected())
+            r = Integer.toString(inc) + r;
+        else
+            r += Integer.toString(inc);
+        switch (selectVarAddInc.getSelectedIndex()){
+            case 0:
+                return r + beginS;
+            case 1:
+                return beginS + r;
+            case 2:
+                return r;
+            default:
+                return beginS;
         }
     }
 }

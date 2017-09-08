@@ -1,2 +1,2 @@
-public enum mods { LOW, UP, PREFIX, POSTFIX, DELPREF, DELPOST, DELSUB
+public enum mods { LOW, UP, PREFIX, POSTFIX, DELPREF, DELPOST, DELSUB, INC
 }
