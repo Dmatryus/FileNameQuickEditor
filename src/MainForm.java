@@ -7,8 +7,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
-class Form extends JFrame {
+class MainForm extends JFrame {
 
     private final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Изменение подстрок", "Инкрименирование записей", "Удаление файлов"};
     private HashMap<String, JTextField> funkTF = new HashMap<>();
@@ -26,13 +27,24 @@ class Form extends JFrame {
     private ArrayList<File> files = new ArrayList<>();
     private JComboBox<String> selectVarAddInc;
     private FileTableModel model = new FileTableModel(files);
+    private static HashSet<String> ignorStrings = new HashSet<>();
+
+    static HashSet<String> getIgnorStrings() {
+        return ignorStrings;
+    }
     //   String selectedFunk = null;
 
-    Form() {
+    static void setIgnorStrings(HashSet<String> ignorStrings) {
+        MainForm.ignorStrings = ignorStrings;
+    }
+
+    MainForm() {
         super("FNQE");
         setSize(1100, 600);
         setMinimumSize(new Dimension(1100, 200));
+
         setLayout(new BorderLayout());
+
 
         // Панель выбора дериктории
         JPanel selectPanel = new JPanel(new BorderLayout());
@@ -52,7 +64,7 @@ class Form extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                int response = fileChooser.showDialog(Form.this, null);
+                int response = fileChooser.showDialog(MainForm.this, null);
                 String openPath;
                 if (response == JFileChooser.APPROVE_OPTION) {
                     openPath = fileChooser.getSelectedFile().toString();
@@ -177,11 +189,11 @@ class Form extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 int[] is = table.getSelectedRows();
                 String name, fullName;
-                for (int i = 0; i<is.length; i++){
+                for (int i = 0; i < is.length; i++) {
                     name = table.getValueAt(i, 0).toString();
-                    fullName = selectTF.getText()+ "//" + name;
+                    fullName = selectTF.getText() + "//" + name;
                     model.getFileAt(i).delete();
-                    setCatalog(selectTF.getText());
+                    setCatalog(fullName);
                     model.fireTableDataChanged();
                 }
             }
@@ -205,6 +217,21 @@ class Form extends JFrame {
         });
         add(funkPanel, BorderLayout.SOUTH);
 
+        // Меню
+        JMenuBar menuBar = new JMenuBar();
+        JMenu settingMenu = new JMenu("Настройки");
+        JMenuItem ignoreMI = new JMenuItem("Список игнорируемых расширений файлов");
+        ignoreMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new IgnoreForm();
+            }
+        });
+
+        settingMenu.add(ignoreMI);
+        menuBar.add(settingMenu);
+        setJMenuBar(menuBar);
+
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
     }
@@ -219,49 +246,52 @@ class Form extends JFrame {
             name = table.getValueAt(i, 0).toString();
             extensionPosition = name.lastIndexOf(".");
             String[] splitType = {name.substring(0, extensionPosition), name.substring(extensionPosition)};
-            try {
-                switch (mod) {
-                    case LOW:
-                        name = name.toLowerCase();
-                        break;
-                    case UP:
-                        name = splitType[0].toUpperCase() + splitType[1];
-                        break;
-                    case PREFIX:
-                        if (funkTF.get("extension").getText().equals(""))
-                            throw new EmptyFieldException();
-                        else
-                            name = funkTF.get("extension").getText() + name;
-                        break;
-                    case POSTFIX:
-                        if (funkTF.get("extension").getText().equals(""))
-                            throw new EmptyFieldException();
-                        else {
-                            name = splitType[0] + funkTF.get("extension").getText() + splitType[1];
-                        }
-                        break;
-                    case DELPREF:
-                        name = name.substring((Integer) lengthsCB.getSelectedItem());
-                        break;
-                    case DELPOST:
-                        name = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
-                        break;
-                    case SUB:
-                        name = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
-                        break;
-                    case INC:
-                        name = incName(i, splitType[0]) + splitType[1];
-                        break;
+            if(!ignorStrings.contains(splitType[1].substring(1))){
+                try {
+                    switch (mod) {
+                        case LOW:
+                            name = name.toLowerCase();
+                            break;
+                        case UP:
+                            name = splitType[0].toUpperCase() + splitType[1];
+                            break;
+                        case PREFIX:
+                            if (funkTF.get("extension").getText().equals(""))
+                                throw new EmptyFieldException();
+                            else
+                                name = funkTF.get("extension").getText() + name;
+                            break;
+                        case POSTFIX:
+                            if (funkTF.get("extension").getText().equals(""))
+                                throw new EmptyFieldException();
+                            else {
+                                name = splitType[0] + funkTF.get("extension").getText() + splitType[1];
+                            }
+                            break;
+                        case DELPREF:
+                            name = name.substring((Integer) lengthsCB.getSelectedItem());
+                            break;
+                        case DELPOST:
+                            name = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
+                            break;
+                        case SUB:
+                            name = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
+                            break;
+                        case INC:
+                            name = incName(i, splitType[0]) + splitType[1];
+                            break;
+                    }
+                } catch (EmptyFieldException excp) {
+                    JOptionPane.showMessageDialog(this, excp.getMessage(), "Пустое текстовое поле", JOptionPane.ERROR_MESSAGE);
+                } catch (StringIndexOutOfBoundsException excp) {
+                    JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка длинны удаления", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception excp) {
+                    JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (EmptyFieldException excp) {
-                JOptionPane.showMessageDialog(this, excp.getMessage(), "Пустое текстовое поле", JOptionPane.ERROR_MESSAGE);
-            } catch (StringIndexOutOfBoundsException excp) {
-                JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка длинны удаления", JOptionPane.ERROR_MESSAGE);
-            } catch (Exception excp){
-                JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                rName = selectTF.getText() + "//" + name;
+                model.getFileAt(i).renameTo(new File(rName));
             }
-            rName = selectTF.getText()+ "//" + name;
-            model.getFileAt(i).renameTo(new File(rName));
+
         }
         setCatalog(selectTF.getText());
         model.fireTableDataChanged();
@@ -280,18 +310,18 @@ class Form extends JFrame {
         }
     }
 
-    private String incName(int i, String beginS){
+    private String incName(int i, String beginS) {
         // Начальное значение
         int inc = i;
         if (!(initValTF.getText().isEmpty() || initValTF.getText().equals("")))
             inc = Integer.getInteger(initValTF.getText()) + i;
         // Формирование конструкции
         String r = funkTF.get("inc").getText();
-        if(beginWriteCheckB.isSelected())
+        if (beginWriteCheckB.isSelected())
             r = Integer.toString(inc) + r;
         else
             r += Integer.toString(inc);
-        switch (selectVarAddInc.getSelectedIndex()){
+        switch (selectVarAddInc.getSelectedIndex()) {
             case 0:
                 return r + beginS;
             case 1:
