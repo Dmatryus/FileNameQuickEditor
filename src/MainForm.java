@@ -232,6 +232,8 @@ class MainForm extends JFrame {
         menuBar.add(settingMenu);
         setJMenuBar(menuBar);
 
+        ignorStrings.add("db");     // Расширение временных файлов, которые создаются при изменении системой
+
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
     }
@@ -279,8 +281,8 @@ class MainForm extends JFrame {
                             name = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
                             break;
                         case INC:
-                            inc++;
                             name = incName(inc, splitType[0]) + splitType[1];
+                            inc++;
                             break;
                     }
                 } catch (EmptyFieldException excp) {
