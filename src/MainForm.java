@@ -241,11 +241,12 @@ class MainForm extends JFrame {
         String rName;
         String name;
         String pName;
-        int extensionPosition, iniyValInc;
+        int extensionPosition, inc = 0;
         for (int i = 0; i < is.length; i++) {
             name = table.getValueAt(i, 0).toString();
             extensionPosition = name.lastIndexOf(".");
             String[] splitType = {name.substring(0, extensionPosition), name.substring(extensionPosition)};
+
             if(!ignorStrings.contains(splitType[1].substring(1))){
                 try {
                     switch (mod) {
@@ -278,7 +279,8 @@ class MainForm extends JFrame {
                             name = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
                             break;
                         case INC:
-                            name = incName(i, splitType[0]) + splitType[1];
+                            inc++;
+                            name = incName(inc, splitType[0]) + splitType[1];
                             break;
                     }
                 } catch (EmptyFieldException excp) {
