@@ -28,6 +28,7 @@ class MainForm extends JFrame {
     private JComboBox<String> selectVarAddInc;
     private FileTableModel model = new FileTableModel(files);
     private static HashSet<String> ignorStrings = new HashSet<>();
+    private int sizeNumInc = 0;
 
     static HashSet<String> getIgnorStrings() {
         return ignorStrings;
@@ -172,6 +173,10 @@ class MainForm extends JFrame {
         exeBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                int init = 0;
+                if (!initValTF.getText().equals(""))
+                    init = Integer.parseInt(initValTF.getText());
+                sizeNumInc = getSizeInt(table.getSelectedRowCount() + init);
                 renameFiles(mods.INC);
             }
         });
@@ -238,6 +243,15 @@ class MainForm extends JFrame {
         setVisible(true);
     }
 
+    private int getSizeInt(int num) {
+        int count = 0;
+        while (num > 0) {
+            count++;
+            num /= 10;
+        }
+        return count;
+    }
+
     private void renameFiles(mods mod) {
         int[] is = table.getSelectedRows();
         String rName;
@@ -249,7 +263,7 @@ class MainForm extends JFrame {
             extensionPosition = name.lastIndexOf(".");
             String[] splitType = {name.substring(0, extensionPosition), name.substring(extensionPosition)};
 
-            if(!ignorStrings.contains(splitType[1].substring(1))){
+            if (!ignorStrings.contains(splitType[1].substring(1))) {
                 try {
                     switch (mod) {
                         case LOW:
@@ -321,10 +335,15 @@ class MainForm extends JFrame {
             inc = Integer.getInteger(initValTF.getText()) + i;
         // Формирование конструкции
         String r = funkTF.get("inc").getText();
+        String addString = "";
+        for (int j = 0; j < sizeNumInc - getSizeInt(inc); j++)
+            addString += '0';
+        if (inc > 0)
+            addString += Integer.toString(inc);
         if (beginWriteCheckB.isSelected())
-            r = Integer.toString(inc) + r;
+            r = addString + r;
         else
-            r += Integer.toString(inc);
+            r += addString;
         switch (selectVarAddInc.getSelectedIndex()) {
             case 0:
                 return r + beginS;
