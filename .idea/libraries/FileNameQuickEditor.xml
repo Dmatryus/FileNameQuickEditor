@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="FileNameQuickEditor">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/out/artifacts/FileNameQuickEditor_jar/FileNameQuickEditor.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
