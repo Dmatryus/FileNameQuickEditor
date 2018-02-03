@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -70,7 +69,7 @@ public class IgnoreForm extends JDialog {
                         String s = br.readLine();
                         dataSet.clear();
                         for (String is: s.split(", ")){
-                            dataSet.add(claenExtension(is));
+                            dataSet.add(clearingExtension(is));
                         }
                         list.setListData(dataSet.toArray());
                     }catch (Exception exception){
@@ -114,7 +113,7 @@ public class IgnoreForm extends JDialog {
         addBt.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dataSet.add(claenExtension(addTF.getText().toLowerCase()));
+                dataSet.add(clearingExtension(addTF.getText().toLowerCase()));
                 list.setListData(dataSet.toArray());
                 addTF.setText("");
             }
@@ -142,7 +141,8 @@ public class IgnoreForm extends JDialog {
         // Панель добавления исключения
     }
 
-    private String claenExtension(String string) {
+    // Функция отчистки расширения от посторонних символов
+    private String clearingExtension(String string) {
         char[] symbols = {'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm'};
         StringBuilder builder = new StringBuilder(string), r = new StringBuilder();
         for (int i = 0; i < builder.length(); i++)
@@ -150,10 +150,5 @@ public class IgnoreForm extends JDialog {
                 if (builder.charAt(i) == symbols[j])
                     r.append(builder.charAt(i));
         return r.toString();
-    }
-
-    private void saveIgnoreSet(String path){
-        File file = new File(path);
-
     }
 }

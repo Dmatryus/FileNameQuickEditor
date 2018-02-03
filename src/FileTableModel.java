@@ -6,10 +6,12 @@ import java.io.InputStreamReader;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 public class FileTableModel extends AbstractTableModel {
 
+    private HashMap<String, File> helpMap;
     private ArrayList<File> files;
     private String path;
     private String fileTime = null;
@@ -21,6 +23,12 @@ public class FileTableModel extends AbstractTableModel {
     public FileTableModel(ArrayList<File> files) {
         super();
         this.files = files;
+        helpMap = new HashMap<>();
+    }
+
+    public void initHelpMap(){
+        for (File file : files)
+            helpMap.put(file.getName(), file);
     }
 
     public int getRowCount() {
@@ -33,10 +41,13 @@ public class FileTableModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(int column) {
-        switch (column){
-            case 0: return "Имя файла";
-            case 1: return "Время создания";
-            default: return "+";
+        switch (column) {
+            case 0:
+                return "Имя файла";
+            case 1:
+                return "Время создания";
+            default:
+                return "+";
         }
     }
 
@@ -58,15 +69,14 @@ public class FileTableModel extends AbstractTableModel {
             fileTime = attrs.creationTime().toString();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             return fileTime;
         }
     }
 
-    public File getFileAt(int index){
-        return files.get(index);
+    public File getFileAtName(String fileName) {
+        return helpMap.get(fileName);
     }
 }

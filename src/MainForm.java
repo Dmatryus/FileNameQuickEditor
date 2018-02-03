@@ -12,7 +12,7 @@ import java.util.HashSet;
 class MainForm extends JFrame {
 
     private final String[] FUNKS = {"Регистр", "Удлинение", "Укорачивание", "Изменение подстрок", "Инкрименирование записей", "Удаление файлов"};
-    private HashMap<String, JTextField> funkTF = new HashMap<>();
+    private HashMap<String, JTextField> funkTF = new HashMap<>();   // Чтобы не путаться в назначении полей
     // Глобальные элементы
     // Общие
     private JTable table;
@@ -30,30 +30,22 @@ class MainForm extends JFrame {
     private static HashSet<String> ignorStrings = new HashSet<>();
     private int sizeNumInc = 0;
 
-    static HashSet<String> getIgnorStrings() {
-        return ignorStrings;
-    }
-    //   String selectedFunk = null;
-
-    static void setIgnorStrings(HashSet<String> ignorStrings) {
-        MainForm.ignorStrings = ignorStrings;
-    }
-
-    MainForm() {
+    public MainForm() {
+        // Возможно размер стоит подкорректировать ибо писалось изначально для разрешения 2560х1440 на 13 дюймов
         super("FNQE");
         setSize(1100, 600);
         setMinimumSize(new Dimension(1100, 200));
 
         setLayout(new BorderLayout());
 
-
         // Панель выбора дериктории
         JPanel selectPanel = new JPanel(new BorderLayout());
         JLabel selectLabel = new JLabel("Выбор папки сфайлами для редактирования");
         selectTF = new JTextField();
-        selectTF.setEnabled(false);
+        selectTF.setEnabled(false);     // Поле только для просмотра (и хранения данных) возможно будет сбивать пользователя
         JButton selectBt = new JButton("Обзор");
 
+        // Распределение зон
         selectPanel.add(selectLabel, BorderLayout.NORTH);
         selectPanel.add(selectTF, BorderLayout.CENTER);
         selectPanel.add(selectBt, BorderLayout.EAST);
@@ -70,7 +62,7 @@ class MainForm extends JFrame {
                 if (response == JFileChooser.APPROVE_OPTION) {
                     openPath = fileChooser.getSelectedFile().toString();
                     selectTF.setText(openPath);
-                    setCatalog(openPath);
+                    setCatalog(openPath);   // Запись файлов в таблицу происходит здесь
                 }
             }
         });
@@ -197,7 +189,7 @@ class MainForm extends JFrame {
                 for (int i = 0; i < is.length; i++) {
                     name = table.getValueAt(i, 0).toString();
                     fullName = selectTF.getText() + "//" + name;
-                    model.getFileAt(i).delete();
+                    model.getFileAtName(name).delete();
                     setCatalog(fullName);
                     model.fireTableDataChanged();
                 }
@@ -205,6 +197,7 @@ class MainForm extends JFrame {
         });
         delFilePanel.add(delFileBt);
 
+        // Создание переменной панели
         final JPanel undefPanel = new JPanel(new CardLayout());
         undefPanel.add(regPanel, FUNKS[0]);
         undefPanel.add(lengthPanel, FUNKS[1]);
@@ -252,14 +245,17 @@ class MainForm extends JFrame {
         return count;
     }
 
+    // Основная функциональность
     private void renameFiles(mods mod) {
         int[] is = table.getSelectedRows();
         String rName;
         String name;
+        String tName;
 
         int extensionPosition, inc = 0;
         for (int i = 0; i < is.length; i++) {
-            name = table.getValueAt(i, 0).toString();
+            name = table.getValueAt(is[i], 0).toString();
+            tName = name;
             extensionPosition = name.lastIndexOf(".");
             String[] splitType = {name.substring(0, extensionPosition), name.substring(extensionPosition)};
 
@@ -267,35 +263,35 @@ class MainForm extends JFrame {
                 try {
                     switch (mod) {
                         case LOW:
-                            name = name.toLowerCase();
+                            tName = name.toLowerCase();
                             break;
                         case UP:
-                            name = splitType[0].toUpperCase() + splitType[1];
+                            tName = splitType[0].toUpperCase() + splitType[1];
                             break;
                         case PREFIX:
                             if (funkTF.get("extension").getText().equals(""))
                                 throw new EmptyFieldException();
                             else
-                                name = funkTF.get("extension").getText() + name;
+                                tName = funkTF.get("extension").getText() + name;
                             break;
                         case POSTFIX:
                             if (funkTF.get("extension").getText().equals(""))
                                 throw new EmptyFieldException();
                             else {
-                                name = splitType[0] + funkTF.get("extension").getText() + splitType[1];
+                                tName = splitType[0] + funkTF.get("extension").getText() + splitType[1];
                             }
                             break;
                         case DELPREF:
-                            name = name.substring((Integer) lengthsCB.getSelectedItem());
+                            tName = name.substring((Integer) lengthsCB.getSelectedItem());
                             break;
                         case DELPOST:
-                            name = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
+                            tName = name.substring(0, extensionPosition - (Integer) lengthsCB.getSelectedItem()) + splitType[1];
                             break;
                         case SUB:
-                            name = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
+                            tName = splitType[0].replaceAll(funkTF.get("sub").getText(), funkTF.get("newsub").getText()) + splitType[1];
                             break;
                         case INC:
-                            name = incName(inc, splitType[0]) + splitType[1];
+                            tName = incName(inc, splitType[0]) + splitType[1];
                             inc++;
                             break;
                     }
@@ -306,8 +302,9 @@ class MainForm extends JFrame {
                 } catch (Exception excp) {
                     JOptionPane.showMessageDialog(this, excp.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
                 }
-                rName = selectTF.getText() + "//" + name;
-                model.getFileAt(i).renameTo(new File(rName));
+                rName = selectTF.getText() + "//" + tName;
+                File tFile = model.getFileAtName(name);
+                tFile.renameTo(new File(rName));
             }
 
         }
@@ -315,6 +312,7 @@ class MainForm extends JFrame {
         model.fireTableDataChanged();
     }
 
+    // Извлечение файлов из каталога
     private void setCatalog(String path) {
         try {
             File catalog = new File(path);
@@ -323,11 +321,13 @@ class MainForm extends JFrame {
             Collections.addAll(files, openCatalog);
 
             model.fireTableDataChanged();
+            model.initHelpMap();
         } catch (NullPointerException e) {
             JOptionPane.showMessageDialog(this, "В выбранной дериктории не найдено файлов.", "Пустая дериктория", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // Функция составления инкрементированного имени
     private String incName(int i, String beginS) {
         // Начальное значение
         int inc = i;
@@ -354,5 +354,14 @@ class MainForm extends JFrame {
             default:
                 return beginS;
         }
+    }
+
+    public static HashSet<String> getIgnorStrings() {
+        return ignorStrings;
+    }
+    //   String selectedFunk = null;
+
+   public static void setIgnorStrings(HashSet<String> ignorStrings) {
+        MainForm.ignorStrings = ignorStrings;
     }
 }
