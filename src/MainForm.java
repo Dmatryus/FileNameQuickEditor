@@ -256,7 +256,7 @@ class MainForm extends JFrame {
         int[] is = table.getSelectedRows();
         String rName;
         String name;
-        String pName;
+
         int extensionPosition, inc = 0;
         for (int i = 0; i < is.length; i++) {
             name = table.getValueAt(i, 0).toString();
